@@ -1,36 +1,37 @@
-# azure-pipeline.yml
-
 trigger:
   branches:
     include:
-      - main  # Trigger the pipeline on changes to the 'main' branch
+      - main
 
 pool:
-  vmImage: 'windows-latest'  # Use the latest Windows-based image for the build agent
+  vmImage: 'windows-latest'
 
 steps:
-  - task: UseDotNet@2  # Install .NET SDK version
+  - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
-      version: '6.x'  # Specify the version of the .NET SDK you need
+      version: '6.x'
       installationPath: $(Agent.ToolsDirectory)/dotnet
 
-  - task: Restore@1  # Restore NuGet packages
+  # Replacing the Restore task with DotNetCoreCLI
+  - task: DotNetCoreCLI@2
     inputs:
-      restoreSolution: '**/*.sln'
+      command: 'restore'
+      projects: '**/*.sln'  # Restore all solutions in the repo
 
-  - task: Build@1  # Build the application
+  - task: DotNetCoreCLI@2  # Build step
     inputs:
-      solution: '**/*.sln'
-      msbuildArgs: '/p:Configuration=Release'
+      command: 'build'
+      projects: '**/*.sln'
+      arguments: '--configuration Release'
 
-  - task: Test@2  # Run unit tests
+  - task: DotNetCoreCLI@2  # Test step
     inputs:
-      testSelector: 'testAssemblies'
-      testAssembly: '**/*.Tests.dll'
-      testRunTitle: 'Unit Tests'
+      command: 'test'
+      projects: '**/*.Tests/*.csproj'  # Use appropriate test project path
+      arguments: '--configuration Release'
 
-  - task: PublishBuildArtifacts@1  # Publish build artifacts (e.g., binaries, logs)
+  - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'drop'
