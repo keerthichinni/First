@@ -1,0 +1,37 @@
+# azure-pipeline.yml
+
+trigger:
+  branches:
+    include:
+      - main  # Trigger the pipeline on changes to the 'main' branch
+
+pool:
+  vmImage: 'windows-latest'  # Use the latest Windows-based image for the build agent
+
+steps:
+  - task: UseDotNet@2  # Install .NET SDK version
+    inputs:
+      packageType: 'sdk'
+      version: '6.x'  # Specify the version of the .NET SDK you need
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+  - task: Restore@1  # Restore NuGet packages
+    inputs:
+      restoreSolution: '**/*.sln'
+
+  - task: Build@1  # Build the application
+    inputs:
+      solution: '**/*.sln'
+      msbuildArgs: '/p:Configuration=Release'
+
+  - task: Test@2  # Run unit tests
+    inputs:
+      testSelector: 'testAssemblies'
+      testAssembly: '**/*.Tests.dll'
+      testRunTitle: 'Unit Tests'
+
+  - task: PublishBuildArtifacts@1  # Publish build artifacts (e.g., binaries, logs)
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
