@@ -1,19 +1,44 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
+# Azure Pipeline for a Python Application
 trigger:
-- main
+  branches:
+    include:
+      - main  # Trigger pipeline on changes to the main branch
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'  # Use Ubuntu as the build agent
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    displayName: 'Build the Python Application'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+        addToPath: true
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    - script: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+      displayName: 'Setup Python Environment and Install Dependencies'
+
+- stage: Test
+  jobs:
+  - job: TestJob
+    displayName: 'Run Python Tests'
+    steps:
+    - script: |
+        source venv/bin/activate
+        pytest
+      displayName: 'Run Unit Tests'
+
+- stage: Deploy
+  jobs:
+  - job: DeployJob
+    displayName: 'Deploy the Application'
+    steps:
+    - script: |
+        echo "Deploying the Python application..."
+      displayName: 'Deploy Simulation'
