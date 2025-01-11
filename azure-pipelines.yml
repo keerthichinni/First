@@ -1,44 +1,67 @@
-# Azure Pipeline for a Python Application
+# Azure DevOps Pipeline for a Python Application Without Docker
 trigger:
   branches:
     include:
-      - main  # Trigger pipeline on changes to the main branch
+      - main  # Trigger pipeline on changes to the 'main' branch
 
 pool:
   vmImage: 'ubuntu-latest'  # Use Ubuntu as the build agent
 
 stages:
+  
+### Build Stage
 - stage: Build
   jobs:
   - job: BuildJob
-    displayName: 'Build the Python Application'
+    displayName: 'Build Python Application'
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.x'
-        addToPath: true
+      # Debug Step: Verify the presence of requirements.txt
+      - script: |
+          echo "Listing all files in the directory:"
+          ls -l
+          echo "Checking requirements.txt content:"
+          cat requirements.txt || echo "requirements.txt NOT FOUND!"
+        displayName: 'Debug: Check File Structure'
 
-    - script: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-      displayName: 'Setup Python Environment and Install Dependencies'
+      # Install Python and set up a virtual environment
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.x'
+          addToPath: true
 
+      # Setup virtual environment and install dependencies
+      - script: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+        displayName: 'Setup Python Environment and Install Dependencies'
+
+      # Debug Step: Verify installed packages
+      - script: |
+          source venv/bin/activate
+          pip list
+        displayName: 'Debug: Verify Installed Python Packages'
+
+### Test Stage
 - stage: Test
   jobs:
   - job: TestJob
     displayName: 'Run Python Tests'
     steps:
-    - script: |
-        source venv/bin/activate
-        pytest
-      displayName: 'Run Unit Tests'
+      # Run Python tests using pytest
+      - script: |
+          source venv/bin/activate
+          pytest
+        displayName: 'Run Unit Tests with Pytest'
 
+### Deploy Stage
 - stage: Deploy
   jobs:
   - job: DeployJob
-    displayName: 'Deploy the Application'
+    displayName: 'Deploy Python Application (Simulated)'
     steps:
-    - script: |
-        echo "Deploying the Python application..."
-      displayName: 'Deploy Simulation'
+      # Simulate deployment step
+      - script: |
+          echo "Deploying the Python Application..."
+          echo "Application Deployed Successfully!"
+        displayName: 'Simulate Application Deployment'
